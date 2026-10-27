@@ -21,7 +21,7 @@ Ignore follower counts. Saves are a secondary signal.
 - A fresh pin is a new image, never a repin. It gets a new color theme, tilt and hook each week, and links to the same TPT product.
 - **Headline** is the product name, e.g. "WISC-V Report Template". This is what people search for.
 - **Hook** is one short line above the headline, aimed at the audience or the benefit. Examples: "For school SLPs", "Report cards in minutes".
-- **Visual** is the real product cover for products made in Batches 1–6. Older report templates use a School-Templates-style report-page graphic.
+- **Visual** is the real product cover for all 220 products. The older listings use their rebranded School Templates covers (Oct 2026).
 - **Branding** is always "School Templates By Dr. Q". Never use Psych Report Assistant branding.
 - **Color themes** rotate every 4 weeks: white, light aqua, black, dark aqua. Hooks rotate from catalog.json unless the weekly plan overrides them.
 
