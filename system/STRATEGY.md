@@ -4,7 +4,7 @@ Every weekly run reads this file first. It is the standing brief for all 52 week
 
 ## 1. Objective
 
-The goal is TPT sales, not Pinterest vanity numbers. Each week, publish one fresh pin for every live TPT product (220 pins). Every pin links straight to that product's TPT page.
+The goal is TPT sales, not Pinterest vanity numbers. Each week, publish 200 fresh pins (one each for 200 of the 220 TPT products; 20 rotate out each week via system/rotation.json). Every pin links straight to that product's TPT page.
 
 | Funnel step | What it means | Pinterest/TPT metric | What drives it |
 |---|---|---|---|
@@ -31,7 +31,10 @@ Ignore follower counts. Saves are a secondary signal.
 2. **Use test names as plain descriptive references.** Keep ® where the TPT title uses it. Never imply endorsement by test publishers or state agencies.
 3. **One pin per product per week.** Don't flood any single URL.
 4. **Board names must exactly match catalog.json.** Pinterest creates a new board if a name doesn't match.
-5. **Stay within Pinterest's limits.** Titles are 100 characters or fewer and descriptions are 500 or fewer. Each CSV holds at most 200 rows, so always split into two files.
+5. **Stay within Pinterest's limits.** Titles are 100 characters or fewer and descriptions are 500 or fewer. **Pinterest holds at most 100 scheduled pins at a time** (Week 1 lost 120 of 220 pins to the error "More than 100 scheduled Pins"). So each week is two files of exactly 100 pins:
+   - File A `DrQ_WeekNN_A_upload-Wed-MonDD.csv`: Q uploads it Wednesday before 2 pm; pins run Wed 3 pm to Fri 10 pm Central.
+   - File B `DrQ_WeekNN_B_upload-Sat-MonDD.csv`: Q uploads it Saturday before 2 pm; pins run Sat 3 pm to Tue 10 pm Central.
+   - File A must be fully published before B goes up, and B before next week's A. Never put more than 100 rows in a file or let two files overlap in time.
 6. **Media URLs** must be public raw GitHub links under week-NN/.
 
 ## 4. Weekly research (real-time search) → plan file
@@ -86,6 +89,6 @@ Summarize the findings in 3 lines in the run report.
 
 ## 6. Schedule
 
-- One run every Sunday morning (Central). It builds the pins for Wednesday through Tuesday.
+- One run every Sunday morning (Central). It builds the pins for Wednesday through Tuesday and sends Q both files at once, named by upload day.
 - Week 1 started 2026-10-28. Week N starts on 2026-10-28 + 7×(N−1) days.
 - The program ends after week 52 (starting 2027-10-20). After week 52, stop and tell Q.

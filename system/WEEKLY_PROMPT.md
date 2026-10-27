@@ -14,9 +14,9 @@ Run my weekly Pinterest pin build for School Templates By Dr. Q.
    - Push week-NN/ and the plan to main.
    - Confirm that 3 image links load.
 5. Send me:
-   - both CSV files
+   - both CSV files (file A for Wednesday, file B for Saturday; 100 pins each)
    - a short report: publish dates, focus boards and why (with sources), data insights, and listings to fix
-   - the Step 5 reminder: Pinterest desktop → profile menu (down-arrow, top right) → Settings → Import content → Upload .csv → file 1, then file 2
+   - the upload reminder: Wednesday before 2 pm upload file A; Saturday before 2 pm upload file B. Path: Pinterest desktop → profile menu (down-arrow, top right) → Settings → Import content → Upload .csv. Never both on the same day (100 scheduled-pin limit).
 
 Stop and tell me if:
 - that week's folder already exists

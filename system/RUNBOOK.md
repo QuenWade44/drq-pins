@@ -16,16 +16,17 @@
 4. Research: run 3–5 web searches as described in STRATEGY.md §4, then write `plans/week-NN.json`.
 5. Build the pins: run `python3 system/make_pins.py --week N --start START --plan plans/week-NN.json`.
 6. Check the output:
-   - There are 220 JPGs and 2 CSVs.
-   - Each CSV has 200 or fewer rows.
+   - There are 200 JPGs and 2 CSVs named DrQ_WeekNN_A_upload-Wed-*.csv and DrQ_WeekNN_B_upload-Sat-*.csv.
+   - Each CSV has exactly 100 rows (Pinterest's limit is 100 scheduled pins at a time).
+   - File A runs Wed 3 pm to Fri 10 pm Central; file B runs Sat 3 pm to Tue 10 pm Central. No overlap.
    - No title is over 100 characters and no description is over 500.
    - Every board name matches catalog.json.
    - All publish dates fall in the future.
    - Open 6 random pins to check them visually.
-7. Commit and push week-NN/ and plans/week-NN.json.
+7. Commit and push week-NN/, plans/week-NN.json and system/rotation.json.
    - Then curl 3 random Media URLs and expect HTTP 200.
    - Note that raw.githubusercontent.com can take a minute to update.
 8. Deliver to Q:
    - Send both CSV files.
    - Send a short report: the week's dates, focus boards and why (with sources), any data insights, and any listings flagged for fixes.
-   - Remind Q to do Step 5: on desktop Pinterest, open the profile menu (down-arrow, top right) → Settings → Import content → Upload .csv, upload file 1, then file 2, then check scheduled pins. Never write "Create → Bulk create Pins" (wrong path).
+   - Remind Q of the two upload days. Wednesday before 2 pm: upload file A. Saturday before 2 pm: upload file B. Path each time: desktop Pinterest → profile menu (down-arrow, top right) → Settings → Import content → Upload .csv. Never upload both files on the same day (Pinterest rejects anything over 100 scheduled pins). Never write "Create → Bulk create Pins" (wrong path).

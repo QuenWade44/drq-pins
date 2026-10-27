@@ -3,7 +3,8 @@
     python3 system/make_pins.py --week 2 --start 2026-11-04 [--plan plans/week-02.json]
 
 Reads system/catalog.json (220 products) and an optional weekly plan written by the research step.
-Writes week-NN/*.jpg (one fresh 1000x1500 pin per product) and week-NN/DrQ_pins_weekNN_file1.csv + file2.csv
+Writes week-NN/*.jpg (one fresh 1000x1500 pin per product, 200/week) and two upload files:
+  week-NN/DrQ_WeekNN_A_upload-Wed-MonDD.csv (100 pins, Wed-Fri) and DrQ_WeekNN_B_upload-Sat-MonDD.csv (100 pins, Sat-Tue)
 (Pinterest bulk upload: max 200 rows per file). Times are scheduled in America/Chicago and written as UTC.
 """
 import os, sys, json, csv, random, argparse, datetime as dt
@@ -172,71 +173,109 @@ def copy_for(p, hook, cat, kw_extra):
     return title, desc[:500], ", ".join(kws[:8])
 
 
-def slots(start, n, prime_share=0.45):
-    """n publish times over 7 days in Central time; weekends and evenings get more pins."""
-    weights = [1.0, 1.0, 1.0, 1.0, 1.05, 1.2, 1.3]  # Mon..Sun
-    days = [start + dt.timedelta(days=i) for i in range(7)]
-    w = [weights[d.weekday()] for d in days]
+# Pinterest holds at most 100 scheduled Pins at a time (confirmed by Pinterest's
+# "More than 100 scheduled Pins" rejection email, Oct 2026). So each week is two
+# uploads of 100 pins, and file A has fully published before file B is uploaded.
+PER_FILE = 100
+SKIP = 20                       # 220 products -> 200 pins/week; 20 rotate out
+FIRST_PIN = 15 * 60             # first pin of each file: 3:00 pm Central on upload day
+DAY_W = [1.0, 1.0, 1.0, 1.0, 1.05, 1.2, 1.3]   # Mon..Sun
+
+
+def file_slots(days, n, prime_share=0.45):
+    """n publish times (UTC, is_prime) spread over days=[(date, earliest_minute)], Central time."""
+    w = []
+    for d, first in days:
+        frac = (max(0, 1050 - max(390, first)) + (1320 - max(1080, first))) / (660 + 240)
+        w.append(DAY_W[d.weekday()] * frac)
     counts = [int(n * x / sum(w)) for x in w]
+    order = sorted(range(len(days)), key=lambda i: -w[i])
     for i in range(n - sum(counts)):
-        counts[-(i % 7) - 1] += 1
+        counts[order[i % len(order)]] += 1
     out = []
-    for d, c in zip(days, counts):
-        prime = round(c * prime_share)
+    for (d, first), c in zip(days, counts):
+        a0 = max(390, first); a_len = max(0, 1050 - a0)       # daytime 6:30 am - 5:30 pm
+        p0 = max(1080, first); p_len = 1320 - p0              # prime 6:00 - 10:00 pm
+        prime = round(c * prime_share) if a_len else c
         early = c - prime
-        times = [dt.time(6, 30) for _ in range(0)]
-        for k in range(early):   # 6:30 am - 5:30 pm
-            m = 6 * 60 + 30 + int(k * (11 * 60) / max(1, early))
-            times.append((dt.time(m // 60, m % 60), False))
-        for k in range(prime):   # 6:00 - 10:00 pm (teacher planning time)
-            m = 18 * 60 + int(k * (4 * 60) / max(1, prime))
-            times.append((dt.time(m // 60, m % 60), True))
-        for t, is_prime in sorted(times):
-            local = dt.datetime.combine(d, t, tzinfo=CT)
+        mins = [(a0 + int(k * a_len / max(1, early)), False) for k in range(early)]
+        mins += [(p0 + int(k * p_len / max(1, prime)), True) for k in range(prime)]
+        for m, is_prime in sorted(mins):
+            local = dt.datetime.combine(d, dt.time(m // 60, m % 60), tzinfo=CT)
             out.append((local.astimezone(UTC).replace(tzinfo=None), is_prime))
     return out
 
 
+def week_files(start):
+    """File A: upload Wednesday, pins Wed 3 pm - Fri 10 pm. File B: upload Saturday, pins Sat 3 pm - Tue 10 pm."""
+    wed = start; sat = start + dt.timedelta(days=3)
+    a_days = [(wed, FIRST_PIN), (wed + dt.timedelta(days=1), 0), (wed + dt.timedelta(days=2), 0)]
+    b_days = [(sat, FIRST_PIN)] + [(sat + dt.timedelta(days=i), 0) for i in (1, 2, 3)]
+    return [("A", wed, file_slots(a_days, PER_FILE)), ("B", sat, file_slots(b_days, PER_FILE))]
+
+
+def pick_skips(week, prods, protected):
+    """Rotate SKIP products out each week, oldest-skipped first, never focus boards or winners."""
+    path = os.path.join(SYS, "rotation.json")
+    rot = json.load(open(path)) if os.path.exists(path) else {}
+    last = {}
+    for k, ids in rot.items():
+        wk = int(k.split("-")[1])
+        if wk < week:
+            for i in ids:
+                last[i] = max(last.get(i, 0), wk)
+    cands = [p["id"] for p in prods if p["id"] not in protected]
+    cands.sort(key=lambda i: (last.get(i, 0), (int(i) * 2654435761 + week) % 1000003))
+    skips = sorted(cands[:SKIP])
+    rot[f"week-{week:02d}"] = skips
+    json.dump(dict(sorted(rot.items())), open(path, "w"), indent=1)
+    return set(skips)
+
+
 def build(week, start, plan):
     cat = json.load(open(os.path.join(SYS, "catalog.json")))
-    prods = cat["products"]
     hooks = cat["hooks"]
     ph = plan.get("hooks", {})                      # board -> hook (from research)
     focus = {int(b): w for b, w in plan.get("focus_boards", {}).items()}   # board -> weight (seasonal)
     winners = set(map(str, plan.get("winners", [])))  # product ids with clicks/sales
     ribbons = {int(b): r for b, r in plan.get("ribbons", {}).items()}
     kw_extra = plan.get("extra_keywords", {})
+    protected = winners | {p["id"] for p in cat["products"] if p["board"] in focus}
+    skips = pick_skips(week, cat["products"], protected)
+    prods = [p for p in cat["products"] if p["id"] not in skips]
     outdir = os.path.join(ROOT, f"week-{week:02d}")
     os.makedirs(outdir, exist_ok=True)
     rnd = random.Random(week * 7919)
     # priority: seasonal focus + proven winners get prime-time slots; everything else spreads evenly
-    scored = []
-    for p in prods:
-        s = focus.get(p["board"], 0) + (2 if p["id"] in winners else 0) + rnd.random() * 0.5
-        scored.append((s, p))
-    scored.sort(key=lambda x: -x[0])
-    times = slots(start, len(prods))
-    prime_slots = [t for t, pr in times if pr]; other = [t for t, pr in times if not pr]
+    scored = sorted(((focus.get(p["board"], 0) + (2 if p["id"] in winners else 0) + rnd.random() * 0.5, p) for p in prods),
+                    key=lambda x: -x[0])
+    files = week_files(start)
+    slots_all = [(t, pr, f) for f, _, sl in files for t, pr in sl]
+    assert len(slots_all) == len(prods), (len(slots_all), len(prods))
+    prime_slots = [x for x in slots_all if x[1]]; other = [x for x in slots_all if not x[1]]
     rnd.shuffle(prime_slots); rnd.shuffle(other)
     assigned = []
-    for i, (_, p) in enumerate(scored):
-        t = prime_slots.pop() if prime_slots else other.pop()
-        assigned.append((t, p))
+    for _, p in scored:
+        t, _, f = prime_slots.pop() if prime_slots else other.pop()
+        assigned.append((t, f, p))
     assigned.sort(key=lambda x: x[0])
-    rows = []
-    for t, p in assigned:
+    rows = {"A": [], "B": []}
+    for t, f, p in assigned:
         b = str(p["board"])
         hook = ph.get(b) or hooks[b][(week - 1) % len(hooks[b])]
         fn = f"{p['id']}-w{week:02d}.jpg"
         make_pin(p, week, hook, ribbons.get(p["board"]), os.path.join(outdir, fn))
         title, desc, kw = copy_for(p, hook, cat, kw_extra.get(b, []))
-        rows.append({"Title": title, "Media URL": f"{RAW}/week-{week:02d}/{fn}", "Pinterest board": cat["boards"][b], "Thumbnail": "",
-                     "Description": desc, "Link": p["url"], "Publish date": t.strftime("%Y-%m-%dT%H:%M:%S"), "Keywords": kw})
-    half = (len(rows) + 1) // 2
-    for part, chunk in ((1, rows[:half]), (2, rows[half:])):
-        with open(os.path.join(outdir, f"DrQ_pins_week{week:02d}_file{part}.csv"), "w", newline="", encoding="utf-8") as fh:
-            w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(chunk)
-    return rows
+        rows[f].append({"Title": title, "Media URL": f"{RAW}/week-{week:02d}/{fn}", "Pinterest board": cat["boards"][b], "Thumbnail": "",
+                        "Description": desc, "Link": p["url"], "Publish date": t.strftime("%Y-%m-%dT%H:%M:%S"), "Keywords": kw})
+    names = []
+    for f, day, _ in files:
+        name = f"DrQ_Week{week:02d}_{f}_upload-{day.strftime('%a-%b%d')}.csv"
+        assert len(rows[f]) <= PER_FILE
+        with open(os.path.join(outdir, name), "w", newline="", encoding="utf-8") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(rows[f][0].keys())); w.writeheader(); w.writerows(rows[f])
+        names.append((name, len(rows[f]), rows[f][0]["Publish date"], rows[f][-1]["Publish date"]))
+    return names, sorted(skips)
 
 
 if __name__ == "__main__":
@@ -246,5 +285,7 @@ if __name__ == "__main__":
     ap.add_argument("--plan", default=None)
     a = ap.parse_args()
     plan = json.load(open(a.plan)) if a.plan else {}
-    rows = build(a.week, dt.date.fromisoformat(a.start), plan)
-    print(f"week {a.week}: {len(rows)} pins, {rows[0]['Publish date']} -> {rows[-1]['Publish date']} UTC")
+    names, skips = build(a.week, dt.date.fromisoformat(a.start), plan)
+    for n, c, f, l in names:
+        print(f"{n}: {c} pins, {f} -> {l} UTC")
+    print("rotated out this week:", ", ".join(skips))
