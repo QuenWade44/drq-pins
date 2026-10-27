@@ -28,4 +28,4 @@
 8. Deliver to Q:
    - Send both CSV files.
    - Send a short report: the week's dates, focus boards and why (with sources), any data insights, and any listings flagged for fixes.
-   - Remind Q to do Step 5: on desktop Pinterest, choose Create → Bulk create Pins, then upload file 1 and file 2.
+   - Remind Q to do Step 5: on desktop Pinterest, open the profile menu (down-arrow, top right) → Settings → Import content → Upload .csv, upload file 1, then file 2, then check scheduled pins. Never write "Create → Bulk create Pins" (wrong path).

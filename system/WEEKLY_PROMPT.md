@@ -16,7 +16,7 @@ Run my weekly Pinterest pin build for School Templates By Dr. Q.
 5. Send me:
    - both CSV files
    - a short report: publish dates, focus boards and why (with sources), data insights, and listings to fix
-   - the Step 5 reminder: Pinterest desktop → Create → Bulk create Pins → file 1, then file 2
+   - the Step 5 reminder: Pinterest desktop → profile menu (down-arrow, top right) → Settings → Import content → Upload .csv → file 1, then file 2
 
 Stop and tell me if:
 - that week's folder already exists
