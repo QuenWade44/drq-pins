@@ -1,0 +1,25 @@
+{
+  "week": 2,
+  "start": "2026-11-04",
+  "research_notes": [
+    "First-quarter report cards and parent conferences cluster in November, with sign-ups opening early in the month (e.g., HCPSS: conference sign-up opens Nov 4, conferences before Thanksgiving) - https://rhhs.hcpss.org/node/964 ; https://wilson.isd761.org/families/conferences ; https://winfieldes.bcps.org/parents/conferences",
+    "Marking-period calendars for 2026-27 place Q1 close in late Oct to early Nov - https://files-backend.assets.thrillshare.com/documents/asset/uploaded_file/3987/Vps/30deb5fc-fe3a-4194-9da0-efd52948b274/Important-Marking-Periods-Dates-2026_2027.pdf",
+    "DIBELS 8 benchmarks run BOY, MOY, EOY; MOY windows usually Dec-Jan, so reading-data pins go out 4-8 weeks ahead - https://dibels.uoregon.edu/sites/default/files/2026-06/dibels_benchmark_administration_timeline.pdf",
+    "Pinterest Predicts 2026 report has no school-specific trend we could verify; using the seasonal map (Oct-Nov: boards 8, 5, 7, 4) - https://www.socialmediatoday.com/news/pinterest-publishes-2026-trend-predictions-report/807452/"
+  ],
+  "focus_boards": {"8": 3, "5": 2, "7": 2, "4": 2},
+  "hooks": {
+    "8": "Q1 report cards + conferences",
+    "5": "Ready for fall data meetings",
+    "7": "Get ready for MOY benchmarks",
+    "4": "Mid-fall behavior check-in"
+  },
+  "ribbons": {"8": "Report card season", "7": "MOY prep"},
+  "extra_keywords": {
+    "8": ["first quarter report card comments", "parent teacher conference forms", "fall conference notes"],
+    "5": ["MTSS data meeting", "fall progress monitoring"],
+    "7": ["middle of year benchmark", "reading benchmark prep"],
+    "4": ["behavior data tracking", "Tier 2 behavior interventions"]
+  },
+  "winners": []
+}
